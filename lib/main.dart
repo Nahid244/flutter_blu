@@ -1,120 +1,63 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_blue/flutter_blue.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-//import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:flutter_app4/publicdata.dart';
+import 'package:flutter_app4/two.dart';
+import 'package:http/http.dart' as http;
+import 'dart:async';
+import 'dart:convert';
 void main() => runApp(MyApp());
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatefulWidget{
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
-    return My();
+    return MyApp_s();
   }
-  // This widget is the root of your application.
-  
+
 }
-class My extends State<MyApp>{
-   FlutterBlue flutterBlue=FlutterBlue.instance;
-   BluetoothDevice device;
-   BluetoothState statee;
-   BluetoothDeviceState deviceState;
-  // List<BluetoothDevice> devices = [];
-List<String> devics=[];
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
+class MyApp_s extends State<MyApp>{
+  bool loaded=false;
+  String logGmail="shohel.debugbd@gmail.com";
+  String logPass="123456";
+  _login() async {
+    String url = 'http://ams.mydbdsoft.com/api/auth/login';
+    Map<String, String> headers = {"Content-type": "application/json"};
+    String json = '{"email": "' + logGmail + '", "password": "' + logPass + '"}';
 
-
-
-    flutterBlue.state.listen((state) {
-      statee=state;
-      devics.clear();
-      if (state == BluetoothState.on) {
-
-        flutterBlue.startScan();
-        flutterBlue.scanResults.listen((res){
-          setState(() {
-            for(var i in res ){
-              devics.add(i.device.name);
-            }
-          });
-        });
-        flutterBlue.stopScan();
-
-      }
-      else{
-
-        setState(() {
-          devics.clear();
-        });
-      }
+    var response = await http.post(url, headers: headers, body: json);
+    String body = response.body;
+   // print(body);
+    var data = jsonDecode(body);
+    accesToken=data["access_token"];
+    print(accesToken);
+    setState(() {
+      loaded=true;
     });
 
   }
-
-  // Store the [devices] list in the [_devicesList] for accessing
-  // the list outside this class
-
-      @override
-      Widget build(BuildContext context) {
-
-        // TODO: implement build
-        return MaterialApp(
-          home: Scaffold(
-            appBar: AppBar(
-            backgroundColor: Colors.red,
-            actions: <Widget>[
-              IconButton(icon: Icon(Icons.refresh), onPressed: () {
-
-                Fluttertoast.showToast(
-                    msg: statee.toString(),
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.CENTER,
-                    timeInSecForIosWeb: 1,
-                    backgroundColor: Colors.red,
-                    textColor: Colors.white,
-                    fontSize: 16.0
-                );
-                  },)
-            ],
-            ),
-            body:SingleChildScrollView(
-              child:  Column(
-                children:List.generate(devics.length, (index){
-                   return  Container(
-                     //height: MediaQuery.of(context).size.height/8,
-                     margin: new EdgeInsets.all(20.0),
-                     decoration: new BoxDecoration(
-                       color: Colors.green.withOpacity(0.9),
-                       boxShadow: [
-                         BoxShadow(
-                           color: Colors.grey.withOpacity(0.6),
-                           blurRadius: 10.0, // has the effect of softening the shadow
-                           spreadRadius: 5.0, // has the effect of extending the shadow
-                           offset: Offset(
-                             0, // horizontal, move right 10
-                             7, // vertical, move down 10
-                           ),
-                         )
-                       ],
-
-                     ),
-                     child: Row(
-                       children: <Widget>[
-                         Icon(Icons.bookmark),
-                         Padding(padding: EdgeInsets.only(right: 30)),
-                         Text(devics[index].toString(),style: TextStyle(fontSize: 20),),
-
-                       ],
-                     ),
-
-                   );
-                }),
-              )
-            )
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    if(loaded==false){
+      _login();
+      return MaterialApp(
+        home:Scaffold(
+          backgroundColor: Colors.white,
+          body:  Center(
+            child: CircularProgressIndicator(),
           ),
-        );
-      }
+        )
+      );
     }
+    else{
+      return MaterialApp(
+        home: Two(),
+      );
+    }
+
+  }
+
+}
+
+
+  // This widget is the root of your application.
 
